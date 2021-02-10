@@ -1151,5 +1151,3 @@ class Database(object):
         self.addTriggers()
 
         return self
-
-print('Done importing database')

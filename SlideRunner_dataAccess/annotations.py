@@ -203,7 +203,7 @@ class annotation():
           if (updateAgreed):
               self.agreedClass = self.majorityLabel()
 
-      def _create_annohandle(self, image:np.ndarray, coord:tuple, markersize:int, color:tuple, abscoord:tuple=(None,None)) -> AnnotationHandle:
+      def _create_annohandle(self, image:np.ndarray, coord:tuple, markersize:int, markersize_abs:float, color:tuple, abscoord:tuple=(None,None)) -> AnnotationHandle:
             pt1_rect = (max(0,coord[0]-markersize),
                         max(0,coord[1]-markersize))
             pt2_rect = (min(image.shape[1],coord[0]+markersize),
@@ -211,8 +211,8 @@ class annotation():
             cv2.rectangle(img=image, pt1=(pt1_rect), pt2=(pt2_rect), color=[255,255,255,255], thickness=2)
             cv2.rectangle(img=image, pt1=(pt1_rect), pt2=(pt2_rect), color=color, thickness=1)
 
-            pt1_abs = (abscoord[0]-markersize, abscoord[1]-markersize)
-            pt2_abs = (abscoord[0]+markersize, abscoord[1]+markersize)
+            pt1_abs = (abscoord[0]-markersize_abs, abscoord[1]-markersize_abs)
+            pt2_abs = (abscoord[0]+markersize_abs, abscoord[1]+markersize_abs)
             return AnnotationHandle(annoCoordinate(*pt1_rect, *pt1_abs), annoCoordinate(*pt2_rect, *pt2_abs))
 
       def getDimensions(self) -> (int, int):
@@ -454,13 +454,13 @@ class polygonAnnotation(annotation):
             cv2.line(img=image, pt1=anno, pt2=slideToScreen(self.coordinates[listIdx+1]), thickness=2, color=self.getColor(vp), lineType=cv2.LINE_AA)       
 
             if (selected):
-                self.annoHandles.append(self._create_annohandle(image, anno, markersize, self.getColor(vp), abscoord=self.coordinates[listIdx]))
+                self.annoHandles.append(self._create_annohandle(image, anno, markersize, markersize*zoomLevel, self.getColor(vp), abscoord=self.coordinates[listIdx]))
 
 
         listIdx+=1
         anno = slideToScreen(self.coordinates[listIdx])
         if (selected):
-                self.annoHandles.append(self._create_annohandle(image, anno, markersize, self.getColor(vp), abscoord=self.coordinates[listIdx]))
+                self.annoHandles.append(self._create_annohandle(image, anno, markersize, markersize*zoomLevel,  self.getColor(vp), abscoord=self.coordinates[listIdx]))
 
         cv2.line(img=image, pt1=anno, pt2=slideToScreen(self.coordinates[0]), thickness=2, color=self.getColor(vp), lineType=cv2.LINE_AA)       
 

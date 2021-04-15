@@ -63,12 +63,20 @@ class ReadableCellVizioMKTDataset():
        self.fi.size = int.from_bytes(fSizeByte, byteorder='big', signed=True)
        self.fi.nImages=1000
 
+       # self.fi.width = 576
+       # if ((self.fi.size/(2*self.fi.width))%2!=0):
+       #      self.fi.width=512
+       #      self.fi.height=int(self.fi.size/(2*self.fi.width))
+       # else:
+       #      self.fi.height=int(self.fi.size/(2*self.fi.width))
        self.fi.width = 576
-       if ((self.fi.size/(2*self.fi.width))%2!=0):
-            self.fi.width=512
-            self.fi.height=int(self.fi.size/(2*self.fi.width))
-       else:
-            self.fi.height=int(self.fi.size/(2*self.fi.width))
+       if ((self.fi.size / (2 * self.fi.width)) % 2 != 0):
+           self.width = 512
+       self.fi.height = int(self.fi.size / (2 * self.fi.width))
+
+       if abs(self.fi.width - self.fi.height) > 100:
+           self.fi.width = 448
+           self.fi.height = int(self.fi.size / (2 * self.fi.width))
 
        self.filestats = stat(self.fileName)
        self.fi.nImages = int((self.filestats.st_size-self.fi.offset) / (self.fi.size+self.fi.gapBetweenImages))

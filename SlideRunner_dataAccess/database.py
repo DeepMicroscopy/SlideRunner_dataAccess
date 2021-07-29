@@ -212,11 +212,12 @@ class Database(object):
             vp.COLORS_CLASSES[id] = [*hex_to_rgb(color),255]
         return vp
 
-    def annotateImage(self, img: np.ndarray, leftUpper: list, rightLower:list, zoomLevel:float, vp : ViewingProfile, selectedAnnoID:int):
+    def annotateImage(self, img: np.ndarray, leftUpper: list, rightLower:list, zoomLevel:float, vp : ViewingProfile, selectedAnnoID:int, annotationClasses):
         annos = self.getVisibleAnnotations(leftUpper, rightLower)
         self.VA = annos
         for idx,anno in annos.items():
-            if (isActiveClass(activeClasses=vp.activeClasses,label=self.classPosition(anno.agreedLabel()))) and not anno.deleted:
+            label = self.classPosition(anno.agreedLabel())
+            if (label in annotationClasses) and (annotationClasses[label]['Active']) and not anno.deleted:
                 anno.draw(img, leftUpper, zoomLevel, thickness=2, vp=vp, selected=(selectedAnnoID==anno.uid))
     
     def findIntersectingAnnotation(self, anno:annotation, vp: ViewingProfile, database=None, annoType = None):    
@@ -240,11 +241,12 @@ class Database(object):
             if (uid==classId):
                 return pos+1
 
-    def findClickAnnotation(self, clickPosition, vp : ViewingProfile, database=None, annoType = None, zoom:float=1.0):
+    def findClickAnnotation(self, clickPosition, annotationClasses,  database=None, annoType = None, zoom:float=1.0):
         if (database is None):
             database = self.VA            
         for idx,anno in database.items():
-            if (vp.activeClasses[self.classPosition(anno.agreedLabel())]):
+            if (annotationClasses[0][anno.agreedLabel()]['Active']):
+                #if (vp.activeClasses[self.classPosition(anno.agreedLabel())]):
                 if (anno.positionInAnnotation(clickPosition, zoom=zoom )) and (anno.clickable):
                     if (annoType == anno.annotationType) or (annoType is None):
                         return anno

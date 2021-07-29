@@ -32,6 +32,7 @@ class AnnotationType(enumerate):
     IMAGEANNOTATION = 6
     UNKNOWN = 255
 
+
 class ViewingProfile(object):
     blindMode = False
     annotator = None
@@ -51,6 +52,16 @@ class ViewingProfile(object):
     minimumAnnotationLabelZoom = 4
     majorityClassVote = False
     activeClasses = dict()
+
+    def getColor(self, anno : "annotation"):
+        if (anno.pluginAnnotationLabel is not None):
+            return anno.pluginAnnotationLabel.color
+        if (self.blindMode):
+            return vp.COLORS_CLASSES[anno.labelBy(vp.annotator) ]
+        elif (self.majorityClassVote):
+            return self.COLORS_CLASSES[anno.majorityLabel() ]
+        else:
+            return self.COLORS_CLASSES[anno.agreedLabel()]
 
 
 """
@@ -279,15 +290,6 @@ class annotation():
                     return self.labels[label].classId
           return 0
         
-      def getColor(self, vp : ViewingProfile):
-          if (self.pluginAnnotationLabel is not None):
-              return self.pluginAnnotationLabel.color
-          if (vp.blindMode):
-            return vp.COLORS_CLASSES[self.labelBy(vp.annotator) ]
-          elif (vp.majorityClassVote):
-            return vp.COLORS_CLASSES[self.majorityLabel() ]
-          else:
-            return vp.COLORS_CLASSES[self.agreedLabel()]
       
       def minCoordinates(self) -> annoCoordinate:
             print('Whopsy... you need to overload this.')
@@ -308,10 +310,10 @@ class imageAnnotation(annotation):
     
       def draw(self, image: np.ndarray, leftUpper: tuple, zoomLevel: float, thickness: int, vp : ViewingProfile, selected = False):
 
-            image = cv2.rectangle(image, thickness=thickness, pt1=(0,0), pt2=(image.shape[1],image.shape[0]),color=self.getColor(vp), lineType=cv2.LINE_AA)
+            image = cv2.rectangle(image, thickness=thickness, pt1=(0,0), pt2=(image.shape[1],image.shape[0]),color=vp.getColor(self), lineType=cv2.LINE_AA)
 
             if (len(self.text)>0) and (zoomLevel < self.minimumAnnotationLabelZoom):
-                  cv2.putText(image, self.text, (10, 10), cv2.FONT_HERSHEY_PLAIN , 0.7,self.getColor(vp),1,cv2.LINE_AA)
+                  cv2.putText(image, self.text, (10, 10), cv2.FONT_HERSHEY_PLAIN , 0.7,vp.getColor(self),1,cv2.LINE_AA)
     
       def minCoordinates(self) -> annoCoordinate:
          return annoCoordinate(0,0)
@@ -360,13 +362,13 @@ class rectangularAnnotation(annotation):
       def convertToPath(self):
           return path.Path(np.array([[self.x1, self.x2, self.x2, self.x1, self.x1] ,[self.y1, self.y1, self.y2, self.y2, self.y1]]).T)
 
-      def draw(self, image: np.ndarray, leftUpper: tuple, zoomLevel: float, thickness: int, vp : ViewingProfile, selected = False):
+      def draw(self, image: np.ndarray, leftUpper: tuple, zoomLevel: float, thickness: int, vp : ViewingProfile = None, selected = False):
             xpos1=max(0,int((self.x1-leftUpper[0])/zoomLevel))
             ypos1=max(0,int((self.y1-leftUpper[1])/zoomLevel))
             xpos2=min(image.shape[1],int((self.x2-leftUpper[0])/zoomLevel))
             ypos2=min(image.shape[0],int((self.y2-leftUpper[1])/zoomLevel))
 
-            image = cv2.rectangle(image, thickness=thickness, pt1=(xpos1,ypos1), pt2=(xpos2,ypos2),color=self.getColor(vp), lineType=cv2.LINE_AA)
+            image = cv2.rectangle(image, thickness=thickness, pt1=(xpos1,ypos1), pt2=(xpos2,ypos2),color=vp.getColor(self), lineType=cv2.LINE_AA)
 
             if self.text is not None and (len(self.text)>0) and (zoomLevel < self.minimumAnnotationLabelZoom):
                   cv2.putText(image, self.text, (xpos1+3, ypos2+10), cv2.FONT_HERSHEY_PLAIN , 0.7,(0,0,0),1,cv2.LINE_AA)
@@ -451,18 +453,18 @@ class polygonAnnotation(annotation):
 
         for listIdx in range(self.coordinates.shape[0]-1):
             anno = slideToScreen(self.coordinates[listIdx])
-            cv2.line(img=image, pt1=anno, pt2=slideToScreen(self.coordinates[listIdx+1]), thickness=2, color=self.getColor(vp), lineType=cv2.LINE_AA)       
+            cv2.line(img=image, pt1=anno, pt2=slideToScreen(self.coordinates[listIdx+1]), thickness=2, color=vp.getColor(self), lineType=cv2.LINE_AA)       
 
             if (selected):
-                self.annoHandles.append(self._create_annohandle(image, anno, markersize, markersize*zoomLevel, self.getColor(vp), abscoord=self.coordinates[listIdx]))
+                self.annoHandles.append(self._create_annohandle(image, anno, markersize, markersize*zoomLevel, vp.getColor(self), abscoord=self.coordinates[listIdx]))
 
 
         listIdx+=1
         anno = slideToScreen(self.coordinates[listIdx])
         if (selected):
-                self.annoHandles.append(self._create_annohandle(image, anno, markersize, markersize*zoomLevel,  self.getColor(vp), abscoord=self.coordinates[listIdx]))
+                self.annoHandles.append(self._create_annohandle(image, anno, markersize, markersize*zoomLevel,  vp.getColor(self), abscoord=self.coordinates[listIdx]))
 
-        cv2.line(img=image, pt1=anno, pt2=slideToScreen(self.coordinates[0]), thickness=2, color=self.getColor(vp), lineType=cv2.LINE_AA)       
+        cv2.line(img=image, pt1=anno, pt2=slideToScreen(self.coordinates[0]), thickness=2, color=vp.getColor(self), lineType=cv2.LINE_AA)       
 
         if (len(self.text)>0) and (zoomLevel < self.minimumAnnotationLabelZoom):
                 xpos1=int(0.5*(np.max(self.coordinates[:,0])+np.min(self.coordinates[:,0]) ))
@@ -519,7 +521,7 @@ class circleAnnotation(annotation):
             ypos1=int((self.y1-leftUpper[1])/zoomLevel)
             radius = int(self.r/zoomLevel)
             if (radius>=0):
-                  image = cv2.circle(image, thickness=thickness, center=(xpos1,ypos1), radius=radius,color=self.getColor(vp), lineType=cv2.LINE_AA)
+                  image = cv2.circle(image, thickness=thickness, center=(xpos1,ypos1), radius=radius,color=vp.getColor(self), lineType=cv2.LINE_AA)
             if (len(self.text)>0) and (zoomLevel < self.minimumAnnotationLabelZoom):
                     cv2.putText(image, self.text, (xpos1,ypos1), cv2.FONT_HERSHEY_PLAIN , 0.7,(0,0,0),1,cv2.LINE_AA)
 
@@ -555,7 +557,7 @@ class spotAnnotation(annotation):
             ypos1=int((self.y1-leftUpper[1])/zoomLevel)
             radius=int(int(vp.spotCircleRadius)/zoomLevel)
             if (radius>=0):
-                  image = cv2.circle(image, thickness=thickness, center=(xpos1,ypos1), radius=radius,color=self.getColor(vp), lineType=cv2.LINE_AA)
+                  image = cv2.circle(image, thickness=thickness, center=(xpos1,ypos1), radius=radius,color=vp.getColor(self), lineType=cv2.LINE_AA)
             if (len(self.text)>0) and (zoomLevel < self.minimumAnnotationLabelZoom):
                     cv2.putText(image, self.text, (xpos1+3, ypos1+10), cv2.FONT_HERSHEY_PLAIN , 0.7,(0,0,0),1,cv2.LINE_AA)
 

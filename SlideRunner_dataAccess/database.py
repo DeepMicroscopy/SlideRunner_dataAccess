@@ -220,11 +220,11 @@ class Database(object):
             if (label in annotationClasses) and (annotationClasses[label]['Active']) and not anno.deleted:
                 anno.draw(img, leftUpper, zoomLevel, thickness=2, vp=vp, selected=(selectedAnnoID==anno.uid))
     
-    def findIntersectingAnnotation(self, anno:annotation, vp: ViewingProfile, database=None, annoType = None):    
+    def findIntersectingAnnotation(self, anno:annotation, vp: ViewingProfile, database=None, annoType = None, annotationClasses = None):    
         if (database is None):
             database = self.VA            
         for idx,DBanno in database.items():
-            if (vp.activeClasses[DBanno.agreedLabel()]):
+            if annotationClasses is not None and (DBanno.agreedLabel() in annotationClasses) and (annotationClasses[DBanno.agreedLabel()]['Active']) and not anno.deleted:
                 if (DBanno.intersectingWithAnnotation(anno ))  and (DBanno.clickable):
                     if (annoType == DBanno.annotationType) or (annoType is None):
                         return DBanno

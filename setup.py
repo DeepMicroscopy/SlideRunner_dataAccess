@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 import os
 import sys
 
-version = '1.0.2'
+version = '1.0.4'
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -33,7 +33,7 @@ setup(name='SlideRunner_dataAccess',
       package_data={
       }, 
       install_requires=[
-          'openslide-python>=1.1.1', 'opencv-python>=3.1.0', 'nibabel>=3.1.1',
+          'openslide-python>=1.1.1', 'nibabel>=3.1.1',
           'matplotlib>=2.0.0', 'numpy>=1.13', 'pydicom>=2.1.2', 'pillow>=8.0.1',
       ],
       classifiers=[

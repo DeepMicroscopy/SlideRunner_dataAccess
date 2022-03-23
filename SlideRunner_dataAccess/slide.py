@@ -115,7 +115,6 @@ class RotatableOpenSlide(object):
 
 
 
-
     # Implements 180 degree rotated version of read_region
     def read_region(self, location, level, size, zLevel=0):
         # zlevel is ignored for SVS files
@@ -139,6 +138,15 @@ class RotatableOpenSlide(object):
             return retarr
         else:
             return location
+
+    def get_label_image(self, target_size_x):
+        if (self.isOpenSlide):
+            if 'label' in super().associated_images:
+                img = super().associated_images['label']
+                img = img.resize((target_size_x, int(img.size[1]/img.size[0]*target_size_x)))
+                return np.array(img)
+        
+        return None
 
     def slide_center(self):
         return [int(x/2) for x in self.dimensions]

@@ -152,7 +152,7 @@ class Database(object):
         self.databaseStructure['Annotations'] = DatabaseTable('Annotations').add(DatabaseField('uid','INTEGER',isAutoincrement=True, primaryKey=1)).add(DatabaseField('guid','TEXT')).add(DatabaseField('deleted','INTEGER',defaultValue=0)).add(DatabaseField('slide','INTEGER')).add(DatabaseField('type','INTEGER')).add(DatabaseField('agreedClass','INTEGER')).add(DatabaseField('lastModified','REAL',defaultValue=str(time.time()))).add(DatabaseField('description','TEXT')).add(DatabaseField('clickable', 'INTEGER', defaultValue=1))
         self.databaseStructure['Annotations_coordinates'] = DatabaseTable('Annotations_coordinates').add(DatabaseField('uid','INTEGER',isAutoincrement=True, primaryKey=1)).add(DatabaseField('coordinateX','INTEGER')).add(DatabaseField('coordinateY','INTEGER')).add(DatabaseField('coordinateZ','INTEGER',defaultValue=0)).add(DatabaseField('slide','INTEGER')).add(DatabaseField('annoId','INTEGER')).add(DatabaseField('orderIdx','INTEGER'))
         self.databaseStructure['Persons'] = DatabaseTable('Persons').add(DatabaseField('uid','INTEGER',isAutoincrement=True, primaryKey=1)).add(DatabaseField('name','TEXT')).add(DatabaseField('isExactUser','INTEGER', defaultValue=0))
-        self.databaseStructure['Classes'] = DatabaseTable('Classes').add(DatabaseField('uid','INTEGER',isAutoincrement=True, primaryKey=1)).add(DatabaseField('name','TEXT')).add(DatabaseField('color','TEXT'))
+        self.databaseStructure['Classes'] = DatabaseTable('Classes').add(DatabaseField('uid','INTEGER',isAutoincrement=True, primaryKey=1)).add(DatabaseField('name','TEXT')).add(DatabaseField('clickable','INTEGER', defaultValue=1))
         self.databaseStructure['Annotations_label'] = DatabaseTable('Annotations_label').add(DatabaseField('uid','INTEGER',isAutoincrement=True, primaryKey=1)).add(DatabaseField('exact_id','INTEGER')).add(DatabaseField('person','INTEGER',defaultValue=0)).add(DatabaseField('class','INTEGER')).add(DatabaseField('annoId','INTEGER'))
 
     def isOpen(self):
@@ -208,7 +208,7 @@ class Database(object):
     def updateViewingProfile(self, vp:ViewingProfile):
         classes = self.getAllClasses()
         vp.COLORS_CLASSES = { 0: [0,0,0,0] }
-        for name,id,color in classes:
+        for name,id,color,clickable in classes:
             vp.COLORS_CLASSES[id] = [*hex_to_rgb(color),255]
         return vp
 
@@ -216,7 +216,7 @@ class Database(object):
         annos = self.getVisibleAnnotations(leftUpper, rightLower)
         self.VA = annos
         for idx,anno in annos.items():
-            label = self.classPosition(anno.agreedLabel())
+            label = anno.agreedLabel()
             if (label in annotationClasses) and (annotationClasses[label]['Active']) and not anno.deleted:
                 anno.draw(img, leftUpper, zoomLevel, thickness=2, vp=vp, selected=(selectedAnnoID==anno.uid))
     
@@ -245,7 +245,7 @@ class Database(object):
         if (database is None):
             database = self.VA            
         for idx,anno in database.items():
-            if (annotationClasses[0][anno.agreedLabel()]['Active']):
+            if (annotationClasses[0][anno.agreedLabel()]['Active']) and (annotationClasses[0][anno.agreedLabel()]['Clickable']):
                 #if (vp.activeClasses[self.classPosition(anno.agreedLabel())]):
                 if (anno.positionInAnnotation(clickPosition, zoom=zoom )) and (anno.clickable):
                     if (annoType == anno.annotationType) or (annoType is None):
@@ -993,12 +993,16 @@ class Database(object):
         return self.fetchall()
 
     def getAllClasses(self):
-        self.execute('SELECT name,uid,color FROM Classes ORDER BY uid')
+        self.execute('SELECT name,uid,color,clickable FROM Classes ORDER BY uid')
         self._allclasses = self.fetchall() # save for later
         return self._allclasses
     
     def renameClass(self, classID, name):
         self.execute('UPDATE Classes set name="%s" WHERE uid ==  %d' % (name, classID))
+        self.commit()
+
+    def setClassClickable(self, classID, clickable):
+        self.execute('UPDATE Classes set clickable=%d where uid == %d' % (clickable, classID))
         self.commit()
 
     def deleteClass(self, classID):

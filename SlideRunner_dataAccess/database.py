@@ -1123,6 +1123,7 @@ class Database(object):
         tempcur.execute('CREATE TABLE `Classes` ('
             '`uid`	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,'
             '`name`	TEXT,'
+            '`clickable` INTEGER DEFAULT 1,'
             '`color` TEXT'
             ');')
         

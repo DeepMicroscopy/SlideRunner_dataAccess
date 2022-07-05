@@ -88,11 +88,22 @@ class RotatableOpenSlide(object):
     def __new__(cls, filename, rotate):
         if cls is RotatableOpenSlide:
             bname, ext = os.path.splitext(filename)
-            if ext.upper() == '.DCM': return type("RotatableOpenSlide", (RotatableOpenSlide, dicomimage.ReadableDicomDataset,openslide.ImageSlide), {})(filename, rotate)
+            if ext.upper() == '.DCM': 
+                slideobj = type("RotatableOpenSlide", (RotatableOpenSlide, dicomimage.ReadableDicomDataset,openslide.ImageSlide), {})(filename, rotate)
+                slideobj.isOpenSlide = False
+                return slideobj
             if (ext.upper() in ['.NII','.GZ']): 
-                return type("ReadableNIBDataset", (RotatableOpenSlide,nifty.ReadableNIBDataset, openslide.ImageSlide ), {})(filename, rotate)
-            if ext.upper() == '.MKT': return type("ReadableCellVizioMKTDataset", (RotatableOpenSlide, cellvizio.ReadableCellVizioMKTDataset, openslide.ImageSlide), {})(filename,rotate)
-            if ext.upper() == '.TIF': return type("RotatableOpenSlide", (RotatableOpenSlide, ImageSlide3D,openslide.ImageSlide), {})(filename, rotate)
+                slideobj = type("ReadableNIBDataset", (RotatableOpenSlide,nifty.ReadableNIBDataset, openslide.ImageSlide ), {})(filename, rotate)
+                slideobj.isOpenSlide = False
+                return slideobj
+            if ext.upper() == '.MKT': 
+                slideobj = type("ReadableCellVizioMKTDataset", (RotatableOpenSlide, cellvizio.ReadableCellVizioMKTDataset, openslide.ImageSlide), {})(filename,rotate)
+                slideobj.isOpenSlide = False
+                return slideobj
+            if ext.upper() == '.TIF': 
+                slideobj = type("RotatableOpenSlide", (RotatableOpenSlide, ImageSlide3D,openslide.ImageSlide), {})(filename, rotate)
+                slideobj.isOpenSlide = False
+                return slideobj
             try:
                 slideobj = type("OpenSlide", (RotatableOpenSlide,openslide.OpenSlide), {})(filename, rotate)
                 slideobj.isOpenSlide = True

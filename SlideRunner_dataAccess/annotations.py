@@ -191,7 +191,7 @@ class annotation():
 
            return retval
           
-      def getBoundingBox(self) -> List(int,int,int,int):
+      def getBoundingBox(self) -> List[int]:
         """
             returns the bounding box (x,y,w,h) for an object         
         """
@@ -227,7 +227,7 @@ class annotation():
             pt2_abs = (abscoord[0]+markersize_abs, abscoord[1]+markersize_abs)
             return AnnotationHandle(annoCoordinate(*pt1_rect, *pt1_abs), annoCoordinate(*pt2_rect, *pt2_abs))
 
-      def getDimensions(self) -> Tuple(int, int):
+      def getDimensions(self) -> Tuple[int, int]:
           minC = self.minCoordinates()
           maxC = self.maxCoordinates()
           return (int(maxC.x-minC.x),int(maxC.y-minC.y))

@@ -192,7 +192,7 @@ class Database(object):
         self.execute('SELECT uid,filename,exactImageID,directory from Slides')
         return self.fetchall()
 
-    def getExactPerson(self) -> Tuple(int,str):
+    def getExactPerson(self) -> Tuple[int,str]:
         ret = self.execute('SELECT uid,name from Persons where isExactUser=1 LIMIT 1').fetchone()
         if ret is None:
             return 0, ''

@@ -22,6 +22,7 @@
 import cv2
 import matplotlib.path as path
 import numpy as np
+from typing import List, Tuple
 
 class AnnotationType(enumerate):
     SPOT = 1
@@ -57,7 +58,7 @@ class ViewingProfile(object):
         if (anno.pluginAnnotationLabel is not None):
             return anno.pluginAnnotationLabel.color
         if (self.blindMode):
-            return vp.COLORS_CLASSES[anno.labelBy(vp.annotator) ]
+            return self.COLORS_CLASSES[anno.labelBy(self.annotator) ]
         elif (self.majorityClassVote):
             return self.COLORS_CLASSES[anno.majorityLabel() ]
         else:
@@ -190,7 +191,7 @@ class annotation():
 
            return retval
           
-      def getBoundingBox(self) -> [int,int,int,int]:
+      def getBoundingBox(self) -> List(int,int,int,int):
         """
             returns the bounding box (x,y,w,h) for an object         
         """
@@ -226,7 +227,7 @@ class annotation():
             pt2_abs = (abscoord[0]+markersize_abs, abscoord[1]+markersize_abs)
             return AnnotationHandle(annoCoordinate(*pt1_rect, *pt1_abs), annoCoordinate(*pt2_rect, *pt2_abs))
 
-      def getDimensions(self) -> (int, int):
+      def getDimensions(self) -> Tuple(int, int):
           minC = self.minCoordinates()
           maxC = self.maxCoordinates()
           return (int(maxC.x-minC.x),int(maxC.y-minC.y))

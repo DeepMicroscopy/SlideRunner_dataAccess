@@ -26,7 +26,7 @@ import numpy as np
 import random
 import uuid
 import sys
-from typing import Dict
+from typing import Dict, Tuple
 from .annotations import *
 
 
@@ -192,7 +192,7 @@ class Database(object):
         self.execute('SELECT uid,filename,exactImageID,directory from Slides')
         return self.fetchall()
 
-    def getExactPerson(self) -> (int,str):
+    def getExactPerson(self) -> Tuple(int,str):
         ret = self.execute('SELECT uid,name from Persons where isExactUser=1 LIMIT 1').fetchone()
         if ret is None:
             return 0, ''
@@ -245,8 +245,8 @@ class Database(object):
         if (database is None):
             database = self.VA            
         for idx,anno in database.items():
-            if (annotationClasses[0][anno.agreedLabel()]['Active']) and (annotationClasses[0][anno.agreedLabel()]['Clickable']):
-                #if (vp.activeClasses[self.classPosition(anno.agreedLabel())]):
+            if (('Active' not in annotationClasses[0][anno.agreedLabel()] or (annotationClasses[0][anno.agreedLabel()]['Active'])) and 
+               (('Clickable' not in annotationClasses[0][anno.agreedLabel()]) or (annotationClasses[0][anno.agreedLabel()]['Clickable']))):
                 if (anno.positionInAnnotation(clickPosition, zoom=zoom )) and (anno.clickable):
                     if (annoType == anno.annotationType) or (annoType is None):
                         return anno
